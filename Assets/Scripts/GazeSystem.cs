@@ -15,6 +15,8 @@ public class GazeSystem : MonoBehaviour {
 	[SerializeField]
 	private Image loader;
 
+	private bool gazed = false;
+
 	void OnTriggerEnter(Collider colisionado) { // YO (VARA) HE CHOCADO CON "COLISIONADO"!
 		if(actualCollider == null) { 		//SI ANTES ESTABA CHOCANDO CON "NADA"
 			actualCollider = colisionado; //AHORA ESTOY COLISIONANDO CON "COLISIONADO"
@@ -27,12 +29,19 @@ public class GazeSystem : MonoBehaviour {
 			float tiempoQueHaPasado = (Time.time - startTime); 
 			float porcentajeRellenado = tiempoQueHaPasado / loadTime;
 			loader.fillAmount = porcentajeRellenado; //RELLENAMOS EL CIRCULITO DEL LOADER
+
+			if (porcentajeRellenado >= 1 && gazed == false) {
+				actualCollider.GetComponent<InteractableBehaviour> ().OnGaze.Invoke();
+				gazed = true;
+			}
+
 		}
 	}
 
 	void OnTriggerExit(Collider colisionado) {
 		actualCollider = null;
 		loader.fillAmount = 0;
+		gazed = false;
 	}
 		
 
