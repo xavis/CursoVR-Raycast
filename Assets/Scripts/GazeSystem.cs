@@ -17,42 +17,46 @@ public class GazeSystem : MonoBehaviour {
 
 	private bool gazed = false;
 
-	void OnTriggerEnter(Collider colisionado) { // YO (VARA) HE CHOCADO CON "COLISIONADO"!
-		if(actualCollider == null) { 		//SI ANTES ESTABA CHOCANDO CON "NADA"
-			actualCollider = colisionado; //AHORA ESTOY COLISIONANDO CON "COLISIONADO"
-			startTime = Time.time; //EMPEZAMOS A CONTAR EN TIME.TIME (SEGUNDOS DESDE PLAY)
+	private void CheckCollision(RaycastHit golpeado) { //OnTriggerEnter
+		if (actualCollider == null || actualCollider != golpeado.collider) {
+			actualCollider = golpeado.collider;
+			startTime = Time.time;
+			gazed = false;
 		}
 	}
 
-	void OnTriggerStay(Collider colisionado) { //SEGUIMOS CHOCANDO CON ALGO
-		if (actualCollider == colisionado) { //ESE ALGO ES COLISIONADO DE ONTRIGGERENTER?
-			float tiempoQueHaPasado = (Time.time - startTime); 
-			float porcentajeRellenado = tiempoQueHaPasado / loadTime;
-			loader.fillAmount = porcentajeRellenado; //RELLENAMOS EL CIRCULITO DEL LOADER
-
-			if (porcentajeRellenado >= 1 && gazed == false) {
-				actualCollider.GetComponent<InteractableBehaviour> ().OnGaze.Invoke();
+	private void StayCollision(RaycastHit golpeado) { //OnTriggerStay
+		if (actualCollider == golpeado.collider) { 
+			var porcentajeCarga = (Time.time - startTime) / loadTime;
+			loader.fillAmount = porcentajeCarga;
+			if (porcentajeCarga >= 1 && !gazed) {
 				gazed = true;
+				actualCollider.GetComponent<InteractableBehaviour>().OnGaze.Invoke();
+			}
+		}
+	}
+
+	void FixedUpdate() {
+
+		RaycastHit golpeado;
+
+		if (Physics.Raycast (
+			    Camera.main.transform.position, //POSICION INICIAL RAYO
+			    Camera.main.transform.forward, //DIRECCIÓN LANZADO DEL RAYO
+			    out golpeado, //OBJETO CON EL QUE CHOCAMOS
+			    20.0f)) {  	 //DISTANCIA
+
+			if (golpeado.collider.tag == "Interactable") {
+				CheckCollision (golpeado);
+				StayCollision (golpeado);
 			}
 
+		} else {
+			actualCollider = null;
+			gazed = false;
+			loader.fillAmount = 0;
 		}
-	}
 
-	void OnTriggerExit(Collider colisionado) {
-		actualCollider = null;
-		loader.fillAmount = 0;
-		gazed = false;
-	}
-		
-
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
 	}
 
 }
